@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 
 #ifdef __linux__
 	#define ANSI_COLOR_RED     "\x1b[31m"
@@ -22,8 +23,8 @@
 	#define ANSI_COLOR_RESET   ""
 #endif
 
-int B_WIDTH = 8;
-int B_HEIGHT = 8;
+int B_WIDTH = 0;
+int B_HEIGHT = 0;
 int BOMB_COUNT = 0;
 int BOMBS_FOUND = 0;
 char temp;
@@ -45,16 +46,22 @@ int main(int argc, char** argv) {
 	if (argc > 1 && strcmp(argv[1], "?") == 0) {
 		refresh();
 		printHelp();
-		return 0;
+
+		int response;
+		printf("\n%s[0]: Play, [1]: Quit -> ", ANSI_COLOR_YELLOW);
+		scanf("%d", &response);
+		if (response == 1)
+			return 0;
 	}
 
 	refresh();
-	if (argc > 1 && sscanf(argv[1], "%dx%d", &B_WIDTH, &B_HEIGHT) == 2) {
-		sscanf(argv[1], "%dx%d", &B_WIDTH, &B_HEIGHT);
+	if (argc > 1 && sscanf(argv[1], "%dx%d", &B_HEIGHT, &B_WIDTH) == 2) {
+		sscanf(argv[1], "%dx%d", &B_HEIGHT, &B_WIDTH);
 	}
-	else {
-		printf("Select Board Size (8x8): ");
-		scanf("%d x %d", &B_WIDTH, &B_HEIGHT);
+
+	while (B_WIDTH < 6 || B_HEIGHT < 6) {
+		printf("Select Board Size (MIN. 6x6): ");
+		scanf("%d x %d", &B_HEIGHT, &B_WIDTH);
 		scanf("%c", &temp);
 	}
 
@@ -73,8 +80,9 @@ int main(int argc, char** argv) {
 		refresh();
 		drawBoard(Board);
 
-		if (isTest)
+		if (isTest) {
 			drawBoard(RealBoard);
+		}
 
 		char moveType;
 		int row, column;
@@ -127,14 +135,12 @@ void refresh() {
 		system("clear");
 	#endif
 
-	printf("%s##################### Mysweeper ####################\n%s#################### BY BILLVOG ####################%s\n\n", ANSI_COLOR_YELLOW, ANSI_COLOR_CYAN, ANSI_COLOR_RESET);
+	printf("%s######################## Mysweeper #######################\n%s##################### MADE BY BILLVOG ####################%s\n\n", ANSI_COLOR_YELLOW, ANSI_COLOR_CYAN, ANSI_COLOR_RESET);
 }
 
 void printHelp() {
-	printf("How to play:\nTYPE — Mark box that you think it has a bomb | (m)\nOPEN — Open box. (o)\n");
-	printf("ROW & COLUMN  — Type the coordinates of the box you want to open.\n");
-	printf("\n%sPress enter to exit...", ANSI_COLOR_RED);
-	getchar();
+	printf("How to play:\n1st input: TYPE - [o]: Open Box, [m]: Mark Box.\n2nd input: ROW - The row of the box you want to interact with.\n3rd input: COLUMN - The column of the box you want to interact with.\n\n");
+	printf("Game:\nTo win you need to uncover the whole field without touching a bomb. If you think you found a bomb you can mark it with a flag so you'll be sure you won't click it.\n");
 }
 
 void fillBoard(char board[B_WIDTH][B_HEIGHT], char fill) {
@@ -145,7 +151,6 @@ void fillBoard(char board[B_WIDTH][B_HEIGHT], char fill) {
 }
 
 void initBoard(char board[B_WIDTH][B_HEIGHT], char realBoard[B_WIDTH][B_HEIGHT]) {
-	// Generate bombs
 	for (int i = 0; i < BOMB_COUNT; i++) {
 		int _w = rand() % B_WIDTH;
 		int _h = rand() % B_HEIGHT;
@@ -313,15 +318,10 @@ bool openSquare(char board[B_WIDTH][B_HEIGHT], char realBoard[B_WIDTH][B_HEIGHT]
 						break;
 				}
 
-				for (int y = 0; y < 3; y++) {
-					int newWidth = row + mW + y;
-					int newHeight = column + mH + y;
-					if (realBoard[newWidth][newHeight] != '*' && board[newWidth][newHeight] != '+' && isValid(newWidth, newHeight)) {
-						board[newWidth][newHeight] = realBoard[newWidth][newHeight];
-
-						if (board[newWidth][newHeight] != '0')
-							break;
-					}
+				int newWidth = row + mW;
+				int newHeight = column + mH;
+				if (board[newWidth][newHeight] != '+') {
+					openSquare(board, realBoard, ++newWidth, ++newHeight);
 				}
 			}
 		}
