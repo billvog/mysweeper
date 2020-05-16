@@ -23,6 +23,8 @@
 	#define ANSI_COLOR_RESET   ""
 #endif
 
+#define version "1.0"
+
 int B_WIDTH = 0;
 int B_HEIGHT = 0;
 int BOMB_COUNT = 0;
@@ -68,7 +70,7 @@ int main(int argc, char** argv) {
 	BOMB_COUNT = (B_WIDTH * B_HEIGHT) / 6;
 
 	srand(time(NULL));
-	bool isTest = (argc > 1 && strcmp(argv[1], "-dv") == 0) || (argc > 2 && strcmp(argv[2], "-dv") == 0);
+	bool isTesting = (argc > 1 && strcmp(argv[1], "-dv") == 0) || (argc > 2 && strcmp(argv[2], "-dv") == 0);
 	bool isPlaying = true;
 	char Board[B_WIDTH][B_HEIGHT];
 	char RealBoard[B_WIDTH][B_HEIGHT];
@@ -80,7 +82,7 @@ int main(int argc, char** argv) {
 		refresh();
 		drawBoard(Board);
 
-		if (isTest) {
+		if (isTesting) {
 			drawBoard(RealBoard);
 		}
 
@@ -115,7 +117,7 @@ int main(int argc, char** argv) {
 			refresh();
 			revealBombs(Board, RealBoard);
 
-			printf("%sYOU LOST! %s%d/%d BOMBS FOUND ", ANSI_COLOR_RED, ANSI_COLOR_MAGENTA, BOMBS_FOUND, BOMB_COUNT);
+			printf("%sYOU LOST! %s%d/%d BOMBS FOUND! ", ANSI_COLOR_RED, ANSI_COLOR_MAGENTA, BOMBS_FOUND, BOMB_COUNT);
 			isPlaying = false;
 		}
 	}
@@ -123,7 +125,7 @@ int main(int argc, char** argv) {
 	time_t end = time(NULL);
 	printf("%sTime: %lds", ANSI_COLOR_YELLOW, (end - begin));
 
-	printf("\n\n%sPress enter to exit...", ANSI_COLOR_RED);
+	printf("\n\n%sPress enter to exit...", ANSI_COLOR_BLUE);
 	getchar();
 	return 0;
 }
@@ -135,7 +137,7 @@ void refresh() {
 		system("clear");
 	#endif
 
-	printf("%s######################## Mysweeper #######################\n%s##################### MADE BY BILLVOG ####################%s\n\n", ANSI_COLOR_YELLOW, ANSI_COLOR_CYAN, ANSI_COLOR_RESET);
+	printf("%s######################## Mysweeper #######################\n%s##################### MADE BY BILLVOG ####################\n%s####################### Version %s ######################%s\n\n", ANSI_COLOR_YELLOW, ANSI_COLOR_CYAN, ANSI_COLOR_GREEN, version, ANSI_COLOR_RESET);
 }
 
 void printHelp() {
@@ -253,6 +255,8 @@ void drawBoard(char board[B_WIDTH][B_HEIGHT]) {
 				printf(" %s%c%s ", ANSI_COLOR_MAGENTA, board[width][height], ANSI_COLOR_RESET);
 			else if (board[width][height] == '+')
 				printf(" %s%c%s ", ANSI_COLOR_BLUE, board[width][height], ANSI_COLOR_RESET);
+			else if (board[width][height] == '?')
+				printf(" + ");
 			else
 				printf(" %c ", board[width][height]);
 		}
@@ -336,10 +340,13 @@ void revealBombs(char board[B_WIDTH][B_HEIGHT], char realBoard[B_WIDTH][B_HEIGHT
 			if (realBoard[width][height] == '*') {
 				if (board[width][height] == '+') {
 					BOMBS_FOUND++;
+					continue;
 				}
 
 				board[width][height] = '*';
 			}
+			else if (board[width][height] == '+')
+				board[width][height] = '?';
 		}
 
 	drawBoard(board);
