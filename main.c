@@ -5,7 +5,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__) || defined(unix) || defined(__unix__) || defined(__unix)
 	#define ANSI_COLOR_RED     "\x1b[31m"
 	#define ANSI_COLOR_GREEN   "\x1b[32m"
 	#define ANSI_COLOR_YELLOW  "\x1b[33m"
@@ -43,9 +43,10 @@ bool isValid(int row, int column);
 bool isFirstMove(char board[B_WIDTH][B_HEIGHT]);
 void printHelp();
 void refresh();
+char *formatSeconds(long int s);
 
 int main(int argc, char** argv) {
-	if (argc > 1 && strcmp(argv[1], "?") == 0) {
+	if (argc > 1 && strcmp(argv[1], "--help") == 0) {
 		refresh();
 		printHelp();
 
@@ -91,6 +92,11 @@ int main(int argc, char** argv) {
 		if (!isFirstMove(RealBoard)) {
 			printf("TYPE: ");
 			scanf("%c", &moveType);
+
+			// Invalid move
+			if (moveType != 'o' && moveType != 'm') {
+				continue;
+			}
 		}
 
 		printf("ROW: ");
@@ -123,7 +129,7 @@ int main(int argc, char** argv) {
 	}
 
 	time_t end = time(NULL);
-	printf("%sTime: %lds", ANSI_COLOR_YELLOW, (end - begin));
+	printf("%sTime: %s seconds", ANSI_COLOR_YELLOW, formatSeconds(end - begin));
 
 	printf("\n\n%sPress enter to exit...", ANSI_COLOR_BLUE);
 	getchar();
@@ -143,6 +149,15 @@ void refresh() {
 void printHelp() {
 	printf("How to play:\n1st input: TYPE - [o]: Open Box, [m]: Mark Box.\n2nd input: ROW - The row of the box you want to interact with.\n3rd input: COLUMN - The column of the box you want to interact with.\n\n");
 	printf("Game:\nTo win you need to uncover the whole field without touching a bomb. If you think you found a bomb you can mark it with a flag so you'll be sure you won't click it.\n");
+}
+
+char *formatSeconds(long int s) {
+	int hours = s / 3600;
+	int minutes = s / 60 - hours * 3600;
+	int seconds = s -  minutes * 60;
+	char *formatted = malloc(sizeof(char) * 128);
+	sprintf(formatted, "%02d:%02d:%02d", hours, minutes, seconds);
+	return formatted;
 }
 
 void fillBoard(char board[B_WIDTH][B_HEIGHT], char fill) {
